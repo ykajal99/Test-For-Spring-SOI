@@ -1,0 +1,29 @@
+Apex Class:
+-------------
+
+public class HttpCalloutMethod {
+    public static void makeHttpCallout() {
+        String endpoint = 'https://postman-echo.com/get?foo1=bar1&foo2=bar2';
+        HttpRequest request = new HttpRequest();
+        request.setEndpoint(endpoint);
+        request.setMethod('GET');
+        Http http = new Http();        
+        try {      
+            HttpResponse response = http.send(request);
+            if (response.getStatusCode() == 200) {
+                System.debug('Response Body: ' + response.getBody());
+            } else {
+                System.debug('HTTP Request Failed with Status Code: ' + response.getStatusCode());
+                System.debug('Error Message: ' + response.getStatus());
+            }
+        } catch (Exception e) {
+            System.debug('Exception occurred: ' + e.getMessage());
+        }
+    }
+}
+
+
+Execute Ananymous Window:
+---------------------------------
+
+HttpCalloutMethod.makeHttpCallout();

@@ -1,0 +1,93 @@
+RecentAccount.cmp:
+-------------------------
+<aura:component controller="RecentAccountHandler" implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+	 <aura:attribute name="accounts" type="Account[]" />
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}" />
+    <div class="slds-m-around_medium">
+        <aura:iteration items="{!v.accounts}" var="account">
+            <!--<p>{!account.Name}</p>-->
+        </aura:iteration>
+    </div>
+<div>
+    <lightning:card>
+            <aura:set attribute="title">
+                Account
+            </aura:set>           
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                <thead>
+                    <tr class="slds-line-height_reset slds-text-title_caps">
+                       
+                        <th  class="slds-is-resizable" scope="col">
+                            <div class="slds-truncate" title="Id">Id</div>
+                        </th>
+                        <th  class="slds-is-resizable" scope="col">
+                            <div class="slds-truncate" title="Name">Name</div>
+                        </th>
+                        <th class="slds-is-resizable" scope="col">
+                            <div class="slds-truncate" title="Phone">Phone</div>
+                        </th>
+                       <th class="slds-is-resizable" scope="col">
+                            <div class="slds-truncate" title="Rating">Rating </div>
+                        </th>                        
+                   </tr>
+                </thead>
+                 <aura:if isTrue="{!v.accounts.length > 0}">
+                    <tbody>
+                        <aura:iteration items="{!v.accounts}" var="account">
+                            <tr class="slds-hint-parent">
+                               <th data-label="Id" scope="row">
+                                    <div class="slds-truncate" title="{!account.Id}"> {!account.Id} </div>
+                                </th>
+                                <td data-label="Name">
+                                    <div class="slds-truncate" title="{!account.Name}">{!account.Name}</div>
+                                </td>
+                                <td data-label="Phone">
+                                    <div class="slds-truncate" title="{!account.Phone}">{!account.Phone}</div>
+                                </td>
+                                <td data-label="Rating">
+                                    <div class="slds-truncate" title="{!account.Rating}">{!account.Rating}</div>
+                                </td>
+                            </tr>
+                        </aura:iteration>
+                    </tbody>
+                </aura:if>
+            </table>   
+        </lightning:card>
+    </div>
+</aura:component>
+
+
+RecentAccountController.js:
+--------------------------------
+
+({
+doInit : function(component, event, helper) {
+        var action = component.get("c.getRecentAccounts");
+        action.setCallback(this, function(response) {
+            var state = response.getState();
+            if (state === "SUCCESS") {
+                component.set("v.accounts", response.getReturnValue());
+            } else {
+                console.error("Error fetching recent accounts: " + state);
+            }
+        });    
+        $A.enqueueAction(action);
+    }
+})
+
+RecentAccountHandler.apxc:
+----------------------------------
+
+public class RecentAccountHandler {
+    @AuraEnabled
+    public static List<Account> getRecentAccounts() {
+        return [SELECT Id,Name,Phone,Rating FROM Account ORDER BY CreatedDate DESC LIMIT 10];
+    }
+}
+
+RecentAccountApp.app:
+----------------------------
+
+<aura:application extends="force:slds" >
+    <c:RecentAccount/>
+</aura:application>

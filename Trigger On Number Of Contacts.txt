@@ -1,0 +1,43 @@
+UpdateContactTrigger:
+-------------------------
+
+trigger UpdateNoOfContacts on Account (after insert, after update, after delete, after undelete) {
+ if (Trigger.isAfter) {
+        if (Trigger.isInsert || Trigger.isUpdate || Trigger.isDelete || Trigger.isUndelete) {
+            UpdateNoOfContactsHandler.handleContacts(Trigger.new, Trigger.oldMap, Trigger.isInsert, Trigger.isUpdate, Trigger.isDelete, Trigger.isUndelete);
+        }
+    }
+}
+
+UpdateNumberOfContactsHandler:
+---------------------------------------
+
+public class UpdateNoOfContactsHandler {
+  public static void handleContacts(List<Contact> newContacts, Map<Id, Contact> oldContactMap, Boolean isInsert, Boolean isUpdate, Boolean isDelete, Boolean isUndelete) {
+        Set<Id> accountIds = new Set<Id>();
+
+        if ((isInsert || isUpdate) && newContacts != null) {
+            for (Contact contactRecord : newContacts) {
+                accountIds.add(contactRecord.AccountId);
+            }
+        }
+        if ((isDelete || isUndelete) && oldContactMap != null) {
+            for (Contact contactRecord : oldContactMap.values()) {
+                accountIds.add(contactRecord.AccountId);
+            }
+        }
+        updateAccountNumberOfContacts(accountIds);
+    }
+    private static void updateAccountNumberOfContacts(Set<Id> accountIds) {
+        List<Account> accountsToUpdate = [SELECT Id, Number_of_Contacts__c,(SELECT Id FROM Contacts) FROM Account WHERE Id IN :accountIds];
+        Map<Id, Integer> accountContactCountMap = new Map<Id, Integer>();
+        for (Account acc : accountsToUpdate) {           
+            Integer contactCount = acc.Contacts.size();
+      
+            acc.Number_of_Contacts__c = contactCount;
+            accountContactCountMap.put(acc.Id, contactCount);
+        }
+
+        update accountsToUpdate;
+    }
+}
